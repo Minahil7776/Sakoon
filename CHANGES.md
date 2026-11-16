@@ -1,16 +1,29 @@
-# Admin UI redesign (inspired by the MindCare reference)
+# Psychologist dashboard + profile + extended registration
 
-Copy these files over your project. Same paths. No database changes, no new packages.
+Copy these files into your project (same paths). Files marked CHANGED overwrite existing ones.
 
 NEW
-- app/admin/charts.js   (SVG trend chart + donut, no chart library needed)
-- app/admin/icons.js    (inline icons)
+- app/psychologist/layout.js, page.js, actions.js, controls.js, PsychNav.js, ui.js, icons.js, psychologist.css
+- app/psychologist/profile/page.js, forms.js
+- app/psychologist/profile/preview/page.js
+- app/api/psychologist/photo/route.js
+- components/PublicProfile.js, components/public-profile.css, components/field-select.css
+- lib/profile.js, lib/psychologist.js, lib/options.mjs
 
 CHANGED
-- app/admin/page.js     (new overview: KPI cards, chart, donut, review queue, activity, alerts)
-- app/admin/layout.js   (new sidebar with sections, avatar, sign-out icon)
-- app/admin/AdminNav.js (icons + MAIN / SYSTEM groups)
-- app/admin/admin.css   (full replacement)
-- app/admin/ui.js       (adds Avatar)
-- app/admin/verifications/ReviewActions.js (adds compact icon mode for the queue)
-- lib/format.js         (adds timeAgo)
+- prisma/schema.prisma   (profile fields, Specialization, PsychologistSpecialization, Qualification)
+- prisma/seed.mjs        (RLS on new tables, seeds the specialization list)
+- lib/validation.js      (psychologist registration fields)
+- app/api/auth/register/route.js
+- app/register/page.js   (4 steps for psychologists)
+- components/Field.js    (adds SelectField)
+- middleware.js          (protects /psychologist)
+- app/dashboard/page.js  (sends psychologists to /psychologist)
+- .env.example           (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+SETUP
+1. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to .env
+2. Supabase dashboard > Storage > New bucket: name "avatars", set Public ON
+3. npm run db:push
+4. npm run db:seed
+5. npm run dev

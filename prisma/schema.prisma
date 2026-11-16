@@ -27,6 +27,12 @@ enum VerificationStatus {
   additional_info_required
 }
 
+enum QualificationType {
+  degree
+  license
+  certification
+}
+
 model User {
   id            String        @id @default(uuid()) @db.Uuid
   fullName      String        @map("full_name")
@@ -61,10 +67,65 @@ model PsychologistProfile {
   reviewNote         String?            @map("review_note") // FR-017: reason shown to the applicant
   reviewedAt         DateTime?          @map("reviewed_at")
   reviewedBy         String?            @map("reviewed_by") @db.Uuid
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([verificationStatus])
+  // Public profile (what clients see)
+  title           String?
+  bio             String?
+  experienceYears Int?     @map("experience_years")
+  institution     String? // current clinic or affiliation
+  languages       String[] @default([])
+  photoUrl        String?  @map("photo_url")
+  consultationFee Int?     @map("consultation_fee") // PKR per session (FR-021)
+  sessionDuration Int?     @map("session_duration") // minutes (FR-022)
+  acceptsInstant  Boolean  @default(false) @map("accepts_instant") // FR-046
+  // Cached completeness score (0-100), recomputed on every profile change.
+  // Client-side search can filter on it: verificationStatus = approved AND profileStrength >= 80.
+  profileStrength Int      @default(0) @map("profile_strength")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  user            User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specializations PsychologistSpecialization[]
+  qualifications  Qualification[]
+
+  @@index([verificationStatus, profileStrength])
   @@map("psychologist_profiles")
+}
+
+model Specialization {
+  id            Int                          @id @default(autoincrement())
+  name          String                       @unique
+  psychologists PsychologistSpecialization[]
+
+  @@map("specializations")
+}
+
+model PsychologistSpecialization {
+  psychologistId   String  @map("psychologist_id") @db.Uuid
+  specializationId Int     @map("specialization_id")
+  isPrimary        Boolean @default(false) @map("is_primary")
+
+  psychologist   PsychologistProfile @relation(fields: [psychologistId], references: [userId], onDelete: Cascade)
+  specialization Specialization      @relation(fields: [specializationId], references: [id], onDelete: Cascade)
+
+  @@id([psychologistId, specializationId])
+  @@index([specializationId])
+  @@map("psychologist_specializations")
+}
+
+model Qualification {
+  id             String            @id @default(uuid()) @db.Uuid
+  psychologistId String            @map("psychologist_id") @db.Uuid
+  type           QualificationType
+  title          String
+  institution    String
+  year           Int?
+  reference      String? // licence number
+  createdAt      DateTime          @default(now()) @map("created_at")
+
+  psychologist PsychologistProfile @relation(fields: [psychologistId], references: [userId], onDelete: Cascade)
+
+  @@index([psychologistId])
+  @@map("qualifications")
 }
 
 // FR-147: append-only record of administrative actions

@@ -7,7 +7,7 @@ import { loginSchema, fieldErrors } from "@/lib/validation";
 const DUMMY_HASH = "$2a$12$a4gb2GqaCHqjeC2CdnfbKuaAb1YL.J0GmOZ5v0.EEnxhTlBocDdwa";
 
 export async function POST(req) {
-  const parsed = loginSchema.safeParse(await req.json().catch(() => ({})));
+  const parsed = loginSchema.safeParse(await req.json().catch(() => ({}))); // Validate the request body against the schema
   if (!parsed.success)
     return NextResponse.json({ errors: fieldErrors(parsed.error) }, { status: 400 });
 

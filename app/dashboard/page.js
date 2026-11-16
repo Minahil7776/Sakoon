@@ -10,30 +10,18 @@ export default async function Dashboard() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: {
-      fullName: true,
-      role: true,
-      status: true,
-      psychologistProfile: { select: { verificationStatus: true } },
-    },
+    select: { fullName: true, role: true, status: true },
   });
   // Deleted or suspended since signing in: clear the cookie, then go to login.
   if (!user || user.status !== "active") redirect("/api/auth/expired");
   if (user.role === "admin") redirect("/admin");
-
-  const first = user.fullName.split(" ")[0];
-  const message =
-    user.role === "psychologist"
-      ? user.psychologistProfile?.verificationStatus === "approved"
-        ? "Your profile is verified. You can now set your availability."
-        : "Your application is pending. Upload your credentials so an admin can verify you."
-      : "Find a psychologist and book your first session.";
+  if (user.role === "psychologist") redirect("/psychologist");
 
   return (
     <main className="dash">
       <div className="card">
-        <h1>Hello, {first}</h1>
-        <p className="lead">{message}</p>
+        <h1>Hello, {user.fullName.split(" ")[0]}</h1>
+        <p className="lead">Find a psychologist and book your first session.</p>
         <form action="/api/auth/logout" method="post">
           <button className="btn ghost">Sign out</button>
         </form>

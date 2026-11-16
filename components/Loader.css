@@ -1,0 +1,29 @@
+.loader-container {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  /* Transparent background */
+  background: rgba(243, 248, 247, 0.55);
+
+  /* Optional glass effect */
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.ambulance-loader {
+  width: 180px;
+  height: auto;
+  object-fit: contain;
+}
+
+.loader-container p {
+  color: #12302e;
+  font-size: 14px;
+  font-weight: 500;
+}
