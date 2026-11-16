@@ -10,3 +10,5 @@ Next.js (App Router) + Prisma ORM + PostgreSQL (Supabase).
 
 ## Changing the database
 Edit `prisma/schema.prisma`, then run `npm run db:push`. `npm run db:studio` opens a table browser.
+
+The admin trend chart counts completed consultations by completion date and calculates net PKR revenue from succeeded payment and refund records by processing date. After schema changes, run `npm run db:push` and `npm run db:seed` to apply the tables and enable row-level security.

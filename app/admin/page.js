@@ -41,17 +41,46 @@ export default async function Overview({ searchParams }) {
   const since = new Date(`${buckets[0].key}T00:00:00+05:00`);
   const twoDaysAgo = new Date(Date.now() - 2 * DAY);
 
-  // created_at is "timestamp without time zone" holding UTC, so convert UTC -> Karachi before bucketing.
-  const trendQuery =
+  // Prisma timestamps are stored as UTC without a timezone; convert to Karachi before bucketing.
+  const performanceQuery =
     unit === "month"
-      ? prisma.$queryRaw`select to_char(date_trunc('month', (created_at at time zone 'UTC') at time zone 'Asia/Karachi'), 'YYYY-MM-DD') as key, count(*)::int as n
-                         from users where role <> 'admin' and created_at >= ${since} group by 1`
-      : prisma.$queryRaw`select to_char(date_trunc('day', (created_at at time zone 'UTC') at time zone 'Asia/Karachi'), 'YYYY-MM-DD') as key, count(*)::int as n
-                         from users where role <> 'admin' and created_at >= ${since} group by 1`;
+      ? prisma.$queryRaw`with revenue as (
+                           select to_char(date_trunc('month', (processed_at at time zone 'UTC') at time zone 'Asia/Karachi'), 'YYYY-MM-DD') as key,
+                                  sum(case when kind = 'refund' then -amount_pkr else amount_pkr end)::bigint as revenue
+                           from consultation_payments
+                           where status = 'succeeded' and processed_at >= ${since}
+                           group by 1
+                         ), completed_consultations as (
+                           select to_char(date_trunc('month', (completed_at at time zone 'UTC') at time zone 'Asia/Karachi'), 'YYYY-MM-DD') as key,
+                                  count(*)::int as consultations
+                           from consultations
+                           where status = 'completed' and completed_at >= ${since}
+                           group by 1
+                         )
+                         select coalesce(revenue.key, completed_consultations.key) as key,
+                                coalesce(revenue.revenue, 0)::bigint as revenue,
+                                coalesce(completed_consultations.consultations, 0)::int as consultations
+                         from revenue full outer join completed_consultations using (key)`
+      : prisma.$queryRaw`with revenue as (
+                           select to_char(date_trunc('day', (processed_at at time zone 'UTC') at time zone 'Asia/Karachi'), 'YYYY-MM-DD') as key,
+                                  sum(case when kind = 'refund' then -amount_pkr else amount_pkr end)::bigint as revenue
+                           from consultation_payments
+                           where status = 'succeeded' and processed_at >= ${since}
+                           group by 1
+                         ), completed_consultations as (
+                           select to_char(date_trunc('day', (completed_at at time zone 'UTC') at time zone 'Asia/Karachi'), 'YYYY-MM-DD') as key,
+                                  count(*)::int as consultations
+                           from consultations
+                           where status = 'completed' and completed_at >= ${since}
+                           group by 1
+                         )
+                         select coalesce(revenue.key, completed_consultations.key) as key,
+                                coalesce(revenue.revenue, 0)::bigint as revenue,
+                                coalesce(completed_consultations.consultations, 0)::int as consultations
+                         from revenue full outer join completed_consultations using (key)`;
 
-  const [trend, baseline, newByRole, vGroups, restricted, overdue, queue, activity] = await Promise.all([
-    trendQuery,
-    prisma.user.count({ where: { role: { not: "admin" }, createdAt: { lt: since } } }),
+  const [performance, newByRole, vGroups, restricted, overdue, queue, activity] = await Promise.all([
+    performanceQuery,
     prisma.user.groupBy({ by: ["role"], where: { role: { not: "admin" }, createdAt: { gte: since } }, _count: true }),
     prisma.psychologistProfile.groupBy({ by: ["verificationStatus"], _count: true }),
     prisma.user.count({ where: { status: { not: "active" } } }),
@@ -69,8 +98,12 @@ export default async function Overview({ searchParams }) {
     }),
   ]);
 
-  const byKey = Object.fromEntries(trend.map((r) => [r.key, r.n]));
-  const points = buckets.map((b) => ({ ...b, n: byKey[b.key] ?? 0 }));
+  const byKey = Object.fromEntries(performance.map((r) => [r.key, r]));
+  const points = buckets.map((b) => ({
+    ...b,
+    revenue: Number(byKey[b.key]?.revenue ?? 0),
+    consultations: byKey[b.key]?.consultations ?? 0,
+  }));
 
   const v = Object.fromEntries(vGroups.map((g) => [g.verificationStatus, g._count]));
   const newN = (role) => newByRole.find((r) => r.role === role)?._count ?? 0;
@@ -130,9 +163,9 @@ export default async function Overview({ searchParams }) {
 
       <section className="a-grid-2">
         <div className="a-panel">
-          <div className="a-panel-head"><h2>Sign-ups &amp; total users</h2><span className="a-pill">{periodLabel}</span></div>
-          <TrendChart points={points} baseline={baseline} unit={unit} />
-          <div className="a-legend"><span><i className="sq" />New sign-ups</span><span><i className="ln" />Total users</span></div>
+          <div className="a-panel-head"><h2>Revenue &amp; consultations</h2><span className="a-pill">{periodLabel}</span></div>
+          <TrendChart points={points} unit={unit} />
+          <div className="a-legend"><span><i className="sq" />Revenue</span><span><i className="ln" />Completed consultations</span></div>
         </div>
         <div className="a-panel">
           <div className="a-panel-head"><h2>Psychologist verification</h2></div>

@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL") // pooled connection (port 6543) used by the app
-  directUrl = env("DIRECT_URL")   // direct connection (port 5432) used by migrations
+  directUrl = env("DIRECT_URL") // direct connection (port 5432) used by migrations
 }
 
 enum Role {
@@ -33,6 +33,24 @@ enum QualificationType {
   certification
 }
 
+enum ConsultationStatus {
+  scheduled
+  completed
+  cancelled
+  no_show
+}
+
+enum PaymentRecordKind {
+  charge
+  refund
+}
+
+enum PaymentRecordStatus {
+  pending
+  succeeded
+  failed
+}
+
 model User {
   id            String        @id @default(uuid()) @db.Uuid
   fullName      String        @map("full_name")
@@ -57,6 +75,8 @@ model User {
 model ClientProfile {
   userId String @id @map("user_id") @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  consultations Consultation[] @relation("ConsultationClient")
 
   @@map("client_profiles")
 }
@@ -86,9 +106,46 @@ model PsychologistProfile {
   user            User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
   specializations PsychologistSpecialization[]
   qualifications  Qualification[]
+  consultations   Consultation[]               @relation("ConsultationPsychologist")
 
   @@index([verificationStatus, profileStrength])
   @@map("psychologist_profiles")
+}
+
+model Consultation {
+  id             String             @id @default(uuid()) @db.Uuid
+  clientId       String             @map("client_id") @db.Uuid
+  psychologistId String             @map("psychologist_id") @db.Uuid
+  scheduledAt    DateTime           @map("scheduled_at")
+  status         ConsultationStatus @default(scheduled)
+  amountPkr      Int                @map("amount_pkr")
+  completedAt    DateTime?          @map("completed_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  client       ClientProfile         @relation("ConsultationClient", fields: [clientId], references: [userId], onDelete: Restrict)
+  psychologist PsychologistProfile   @relation("ConsultationPsychologist", fields: [psychologistId], references: [userId], onDelete: Restrict)
+  payments     ConsultationPayment[]
+
+  @@index([status, completedAt])
+  @@index([clientId, scheduledAt])
+  @@index([psychologistId, scheduledAt])
+  @@map("consultations")
+}
+
+model ConsultationPayment {
+  id             String              @id @default(uuid()) @db.Uuid
+  consultationId String              @map("consultation_id") @db.Uuid
+  kind           PaymentRecordKind   @default(charge)
+  status         PaymentRecordStatus @default(pending)
+  amountPkr      Int                 @map("amount_pkr")
+  processedAt    DateTime?           @map("processed_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Restrict)
+
+  @@index([status, processedAt])
+  @@index([consultationId])
+  @@map("consultation_payments")
 }
 
 model Specialization {

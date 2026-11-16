@@ -8,7 +8,8 @@ const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME } = process.env;
 // Supabase exposes the public schema over its REST API. Enabling RLS with no
 // policies means only this server (using the DB password) can read these tables.
 for (const table of [
-  "users", "client_profiles", "psychologist_profiles", "audit_logs",
+  "users", "client_profiles", "psychologist_profiles",
+  "consultations", "consultation_payments", "audit_logs",
   "specializations", "psychologist_specializations", "qualifications",
 ]) {
   await prisma.$executeRawUnsafe(`alter table public."${table}" enable row level security`);

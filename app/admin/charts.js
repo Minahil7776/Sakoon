@@ -4,45 +4,63 @@ const niceStep = (x) => {
   return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
 };
 
-/** Bars: new sign-ups per bucket (left axis). Line: total users over time (right axis). */
-export function TrendChart({ points, baseline, unit }) {
-  const W = 640, H = 250, L = 36, R = 44, T = 14, B = 30;
+function formatRupees(value) {
+  const sign = value < 0 ? "-" : "";
+  const absolute = Math.abs(value);
+  if (absolute >= 1_000_000) return `${sign}Rs ${(absolute / 1_000_000).toLocaleString("en-PK", { maximumFractionDigits: 1 })}M`;
+  if (absolute >= 1_000) return `${sign}Rs ${(absolute / 1_000).toLocaleString("en-PK", { maximumFractionDigits: 1 })}k`;
+  return `${sign}Rs ${absolute}`;
+}
+
+/** Bars: collected revenue (left axis). Line: completed consultations (right axis). */
+export function TrendChart({ points, unit }) {
+  const W = 640, H = 250, L = 50, R = 44, T = 14, B = 30;
   const iw = W - L - R, ih = H - T - B;
 
-  const step = Math.max(1, niceStep(Math.max(...points.map((p) => p.n), 1) / 4));
-  const max = step * 4;
-  let run = baseline;
-  const cum = points.map((p) => (run += p.n));
-  const lo = baseline, hi = Math.max(cum.at(-1), lo + 1);
+  const minRevenue = Math.min(...points.map((p) => p.revenue), 0);
+  const maxRevenue = Math.max(...points.map((p) => p.revenue), 0);
+  const revenueStep = Math.max(1, niceStep(Math.max(maxRevenue - minRevenue, 1) / 4));
+  const minAxisRevenue = Math.floor(minRevenue / revenueStep) * revenueStep;
+  let maxAxisRevenue = Math.ceil(maxRevenue / revenueStep) * revenueStep;
+  if (maxAxisRevenue === minAxisRevenue) maxAxisRevenue = minAxisRevenue + revenueStep * 4;
+  const revenueRange = maxAxisRevenue - minAxisRevenue;
+  const consultationStep = Math.max(1, niceStep(Math.max(...points.map((p) => p.consultations), 1) / 4));
+  const maxConsultations = consultationStep * 4;
 
   const slot = iw / points.length;
   const bw = Math.min(22, slot * 0.62);
   const x = (i) => L + slot * i + slot / 2;
-  const yBar = (v) => T + ih - (v / max) * ih;
-  const yLine = (v) => T + ih * 0.95 - ((v - lo) / (hi - lo)) * ih * 0.85;
+  const yRevenue = (v) => T + ih - ((v - minAxisRevenue) / revenueRange) * ih;
+  const yConsultations = (v) => T + ih - (v / maxConsultations) * ih;
   const every = points.length > 12 ? 5 : 1;
 
   return (
     <svg className="a-chart" viewBox={`0 0 ${W} ${H}`} role="img"
-      aria-label={`New sign-ups per ${unit}. Total users grew from ${baseline} to ${cum.at(-1)}.`}>
+      aria-label={`Revenue in Pakistani rupees and completed consultations per ${unit}.`}>
       {[0, 1, 2, 3, 4].map((g) => {
-        const y = yBar(step * g);
+        const y = T + ih - (g / 4) * ih;
         return (
           <g key={g}>
             <line x1={L} x2={W - R} y1={y} y2={y} className="grid" />
-            <text x={L - 8} y={y + 4} textAnchor="end" className="ax">{step * g}</text>
+            <text x={L - 8} y={y + 4} textAnchor="end" className="ax">
+              {formatRupees(minAxisRevenue + (revenueRange * g) / 4)}
+            </text>
+            <text x={W - R + 8} y={y + 4} className="ax">{consultationStep * g}</text>
           </g>
         );
       })}
-      <text x={W - R + 8} y={T + 10} className="ax">{hi}</text>
-      <text x={W - R + 8} y={T + ih} className="ax">{lo}</text>
 
       {points.map((p, i) => (
         <g key={p.key}>
-          {p.n > 0 && (
-            <rect x={x(i) - bw / 2} y={yBar(p.n)} width={bw} height={T + ih - yBar(p.n)} rx="4"
+          {p.revenue !== 0 && (
+            <rect
+              x={x(i) - bw / 2}
+              y={Math.min(yRevenue(p.revenue), yRevenue(0))}
+              width={bw}
+              height={Math.abs(yRevenue(p.revenue) - yRevenue(0))}
+              rx="4"
               className={i === points.length - 1 ? "bar last" : "bar"}>
-              <title>{`${p.full}: ${p.n} new sign-up${p.n === 1 ? "" : "s"}`}</title>
+              <title>{`${p.full}: ${formatRupees(p.revenue)} revenue`}</title>
             </rect>
           )}
           {(i % every === 0 || i === points.length - 1) && (
@@ -52,8 +70,12 @@ export function TrendChart({ points, baseline, unit }) {
       ))}
 
       <polyline className="line" fill="none"
-        points={points.map((_, i) => `${x(i)},${yLine(cum[i])}`).join(" ")} />
-      <circle cx={x(points.length - 1)} cy={yLine(cum.at(-1))} r="4" className="dot" />
+        points={points.map((p, i) => `${x(i)},${yConsultations(p.consultations)}`).join(" ")} />
+      {points.map((p, i) => (
+        <circle key={p.key} cx={x(i)} cy={yConsultations(p.consultations)} r="3" className="dot">
+          <title>{`${p.full}: ${p.consultations} completed consultation${p.consultations === 1 ? "" : "s"}`}</title>
+        </circle>
+      ))}
     </svg>
   );
 };
