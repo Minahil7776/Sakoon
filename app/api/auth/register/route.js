@@ -55,6 +55,7 @@ export async function POST(req) {
   } catch (err) {
     if (err.code === "P2002")
       return NextResponse.json(
+    
         { errors: { email: "An account with this email already exists. Try signing in." } },
         { status: 409 }
       );

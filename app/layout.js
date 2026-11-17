@@ -1,6 +1,7 @@
 import { Fraunces, Figtree } from "next/font/google";
 import "./globals.css";
 
+
 const display = Fraunces({ subsets: ["latin"], variable: "--font-display", weight: ["400", "600"] });
 const body = Figtree({ subsets: ["latin"], variable: "--font-body" });
 
