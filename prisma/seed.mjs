@@ -10,7 +10,7 @@ const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME } = process.env;
 for (const table of [
   "users", "client_profiles", "psychologist_profiles",
   "consultations", "consultation_payments", "audit_logs",
-  "specializations", "psychologist_specializations", "qualifications",
+  "specializations", "psychologist_specializations", "qualifications", "work_experiences",
 ]) {
   await prisma.$executeRawUnsafe(`alter table public."${table}" enable row level security`);
 }

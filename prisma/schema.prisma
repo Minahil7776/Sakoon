@@ -91,7 +91,7 @@ model PsychologistProfile {
   // Public profile (what clients see)
   title           String?
   bio             String?
-  experienceYears Int?     @map("experience_years")
+  experienceYears Int?     @map("experience_years") // Legacy value; workExperiences is the displayed source of truth.
   institution     String? // current clinic or affiliation
   languages       String[] @default([])
   photoUrl        String?  @map("photo_url")
@@ -106,6 +106,7 @@ model PsychologistProfile {
   user            User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
   specializations PsychologistSpecialization[]
   qualifications  Qualification[]
+  workExperiences WorkExperience[]
   consultations   Consultation[]               @relation("ConsultationPsychologist")
 
   @@index([verificationStatus, profileStrength])
@@ -183,6 +184,25 @@ model Qualification {
 
   @@index([psychologistId])
   @@map("qualifications")
+}
+
+model WorkExperience {
+  id             String    @id @default(uuid()) @db.Uuid
+  psychologistId String    @map("psychologist_id") @db.Uuid
+  title          String
+  organization   String
+  location       String?
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  current        Boolean   @default(false)
+  description    String?
+  documentPath   String?   @map("document_path")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  psychologist PsychologistProfile @relation(fields: [psychologistId], references: [userId], onDelete: Cascade)
+
+  @@index([psychologistId, startDate])
+  @@map("work_experiences")
 }
 
 // FR-147: append-only record of administrative actions

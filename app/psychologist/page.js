@@ -68,13 +68,14 @@ export default async function Overview() {
           {groups.map(([title, items]) => (
             <div key={title} className="p-group">
               <h3>{title}</h3>
-              <ul className="p-check">
+              <ul className="p-check" >
                 {items.map((i) => (
                   <li key={i.key} className={i.done ? "done" : ""}>
                     <i aria-hidden="true">{i.done && <ICheck size={13} />}</i>
                     {i.done ? <span>{i.label}</span> : <Link href={SECTION_HREF(i.section)}>{i.label}</Link>}
                     <b>+{i.points}%</b>
                   </li>
+                  
                 ))}
               </ul>
             </div>

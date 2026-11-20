@@ -14,13 +14,13 @@ const ROLES = [
 // Which step each field lives on, so a server error sends the person back to the right screen.
 const STEP_OF = {
   fullName: 2, email: 2, phone: 2, password: 2,
-  title: 3, specialization: 3, experienceYears: 3,
+  title: 3, specialization: 3,
   qualification: 4, institution: 4, licenseNumber: 4, licenseBody: 4,
 };
 
 const EMPTY = {
   fullName: "", email: "", phone: "", password: "",
-  title: "", specialization: "", experienceYears: "",
+  title: "", specialization: "",
   qualification: "", institution: "", licenseNumber: "", licenseBody: "",
 };
 
@@ -36,10 +36,7 @@ function localErrors(step, v) {
   }
   if (step === 3) {
     if (!v.title) e.title = "Choose your professional title.";
-    if (!v.specialization) e.specialization = "Choose your main area of practice.";
-    const n = Number(v.experienceYears);
-    if (v.experienceYears === "" || !Number.isInteger(n) || n < 0 || n > 60)
-      e.experienceYears = "Enter your years of experience (0–60).";
+    if (!v.specialization) e.specialization = "Choose your specialization.";
   }
   if (step === 4) {
     if (v.qualification.trim().length < 2) e.qualification = "Enter your highest qualification, e.g. M.Sc Clinical Psychology.";
@@ -150,12 +147,10 @@ export default function RegisterPage() {
               <>
                 <SelectField id="title" label="Professional title" options={TITLES} value={values.title}
                   onChange={set("title")} error={err("title")} />
-                <SelectField id="specialization" label="Main area of practice" options={SPECIALIZATIONS}
+                <SelectField id="specialization" label="Specialization" options={SPECIALIZATIONS}
                   value={values.specialization} onChange={set("specialization")} error={err("specialization")}
                   hint="You can add more specializations after signing up." />
-                <Field id="experienceYears" label="Years of experience" type="number" min="0" max="60"
-                  inputMode="numeric" value={values.experienceYears} onChange={set("experienceYears")}
-                  error={err("experienceYears")} />
+                
               </>
             )}
 

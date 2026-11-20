@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requirePsychologist } from "@/lib/psychologist";
 import { syncStrength, loadProfile, computeCompleteness, visibilityOf, BOOKABLE_THRESHOLD } from "@/lib/profile";
 import { TITLES, SPECIALIZATIONS, LANGUAGES, SESSION_DURATIONS } from "@/lib/options.mjs";
+import { profileWorkExperienceSchema, toWorkExperienceData } from "@/lib/work-experience";
+import { removeWorkExperienceDocuments } from "@/lib/work-experience-documents";
 
 const bad = (error) => ({ ok: false, error });
 const firstError = (r) => r.error.issues[0].message;
@@ -20,8 +22,6 @@ export async function saveBasics(input) {
   const user = await requirePsychologist();
   const p = z.object({
     title: z.enum(TITLES, { errorMap: () => ({ message: "Choose your professional title." }) }),
-    experienceYears: z.number({ invalid_type_error: "Enter your years of experience.", required_error: "Enter your years of experience." })
-      .int("Use a whole number.").min(0, "Enter a number between 0 and 60.").max(60, "Enter a number between 0 and 60."),
     institution: z.string().trim().max(120).optional(),
     languages: z.array(z.enum(LANGUAGES)).min(1, "Choose at least one language.").max(9),
   }).safeParse(input);
@@ -32,6 +32,57 @@ export async function saveBasics(input) {
     data: { ...p.data, institution: p.data.institution || null },
   });
   return done(user.id);
+}
+
+export async function saveWorkExperiences(input) {
+  const user = await requirePsychologist();
+  const p = z.object({
+    experiences: z.array(profileWorkExperienceSchema).max(20, "Add up to 20 work experiences."),
+  }).safeParse(input);
+  if (!p.success) return bad(firstError(p));
+
+  const existing = await prisma.workExperience.findMany({
+    where: { psychologistId: user.id },
+    select: { id: true, documentPath: true },
+  });
+  const existingIds = new Set(existing.map((item) => item.id));
+  const submittedIds = p.data.experiences.map((item) => item.id).filter(Boolean);
+  if (new Set(submittedIds).size !== submittedIds.length || submittedIds.some((id) => !existingIds.has(id)))
+    return bad("Refresh the page and try again.");
+
+  const submittedIdSet = new Set(submittedIds);
+  const removed = existing.filter((item) => !submittedIdSet.has(item.id));
+  const deleteError = await removeWorkExperienceDocuments(
+    removed.map((item) => item.documentPath).filter(Boolean)
+  );
+  if (deleteError) return bad(deleteError);
+
+  const ids = await prisma.$transaction(async (tx) => {
+    const savedIds = [];
+    for (const item of p.data.experiences) {
+      const { id, ...fields } = item;
+      const data = toWorkExperienceData(fields);
+      if (id) {
+        await tx.workExperience.update({ where: { id }, data });
+        savedIds.push(id);
+      } else {
+        const created = await tx.workExperience.create({
+          data: { ...data, psychologistId: user.id },
+          select: { id: true },
+        });
+        savedIds.push(created.id);
+      }
+    }
+    await tx.workExperience.deleteMany({
+      where: {
+        psychologistId: user.id,
+        ...(savedIds.length ? { id: { notIn: savedIds } } : {}),
+      },
+    });
+    return savedIds;
+  });
+  const result = await done(user.id);
+  return { ...result, ids };
 }
 
 export async function saveAbout(input) {

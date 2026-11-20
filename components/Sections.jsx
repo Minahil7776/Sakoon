@@ -24,12 +24,12 @@ export function Hero() {
       <Parallax className="brainWrap" from={0} to={-80}>
         <img src="/Brain.jfif" alt="Glowing brain illustration" className="brainImage" />
       </Parallax>
-      <section className="heroHighlights" aria-label="Consultation highlights">
+      {/* <section className="heroHighlights" aria-label="Consultation highlights">
       <Float className="fl f1" d={0}><Avatar name="Dr Amna Rauf" hue={250} /><div><b>Dr. Amna Rauf</b><small>Anxiety & trauma</small></div></Float>
       <Float className="fl f2" d={1}><small>Upcoming</small><b>Thu, 4:30 pm</b><small>Video session · 50 min</small></Float>
       <Float className="fl f3" d={2}><i className="dot" /> Online now</Float>
       <Float className="fl f4" d={.5}><b>4.9</b><small>verified rating</small></Float>
-    </section>
+    </section> */}
       
     </section>
     
@@ -43,8 +43,13 @@ export function Intro() {
     <section id="about" className="intro">
       <Reveal as="h2" className="h2">Taking care of your mental health should feel simple.</Reveal>
       <Parallax className="introNote" from={60} to={-30}><p>No waiting rooms. No phone tag. Find a psychologist, pick a time, and talk from wherever you feel safe.</p></Parallax>
-      
       <Parallax className="introBlob" from={-30} to={50}><span /></Parallax>
+      <section className="heroHighlights" aria-label="Consultation highlights">
+      <Float className="fl f1" d={0}><Avatar name="Dr Amna Rauf" hue={250} /><div><b>Dr. Amna Rauf</b><small>Anxiety & trauma</small></div></Float>
+      <Float className="fl f2" d={1}><small>Upcoming</small><b>Thu, 4:30 pm</b><small>Video session · 50 min</small></Float>
+      <Float className="fl f3" d={2}><i className="dot" /> Online now</Float>
+      <Float className="fl f4" d={.5}><b>4.9</b><small>verified rating</small></Float>
+    </section>
     </section>
   );
 }

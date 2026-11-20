@@ -22,6 +22,12 @@
 .pp-quals > div { background: #f2f8f7; border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 2px; }
 .pp-quals small { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--teal-dark); font-weight: 700; }
 .pp-quals span { color: var(--muted); font-size: 0.88rem; }
+.pp-experiences { display: grid; gap: 14px; }
+.pp-experiences article { display: grid; gap: 3px; padding: 14px 0; border-top: 1px solid var(--mist); }
+.pp-experiences article:first-child { padding-top: 0; border-top: 0; }
+.pp-experiences h3 { margin: 0; color: var(--ink); font-size: 1rem; text-transform: none; letter-spacing: 0; }
+.pp-experiences span, .pp-experiences p { color: var(--muted); font-size: 0.9rem; }
+.pp-experiences p { margin: 6px 0 0; white-space: pre-line; }
 .pp-rows { margin: 0 0 16px; display: grid; gap: 10px; }
 .pp-rows div { display: flex; justify-content: space-between; gap: 12px; }
 .pp-rows dt { color: var(--muted); }

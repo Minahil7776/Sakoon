@@ -27,7 +27,6 @@ export async function POST(req) {
               psychologistProfile: {
                 create: {
                   title: d.title,
-                  experienceYears: d.experienceYears,
                   specializations: {
                     create: [{
                       isPrimary: true,

@@ -3,6 +3,7 @@ import { fmtPKR } from "@/lib/profile";
 
 const TYPE = { degree: "Education", license: "Licence", certification: "Certification" };
 const initials = (n) => n.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+const monthYear = (date) => new Intl.DateTimeFormat("en", { month: "short", year: "numeric", timeZone: "UTC" }).format(date);
 
 /**
  * One component for both the psychologist's preview and the client-facing page.
@@ -30,9 +31,26 @@ export default function PublicProfile({ profile, preview = false, cta }) {
           </div>
           <dl className="pp-stats">
             <div><dt>Rating</dt><dd>New</dd></div>
-            <div><dt>Experience</dt><dd>{profile.experienceYears != null ? `${profile.experienceYears} yrs` : "—"}</dd></div>
+            <div><dt>Experience</dt><dd>{profile.workExperiences.length ? `${profile.workExperiences.length} roles` : "—"}</dd></div>
             <div><dt>Languages</dt><dd>{profile.languages.join(", ") || "—"}</dd></div>
           </dl>
+        </section>
+
+        <section className="pp-card">
+          <h2>Work experience</h2>
+          {profile.workExperiences.length === 0 ? <p className="pp-muted">Not added yet.</p> : (
+            <div className="pp-experiences">
+              {profile.workExperiences.map((experience) => (
+                <article key={experience.id}>
+                  <h3>{experience.title}</h3>
+                  <strong>{experience.organization}</strong>
+                  {experience.location && <span>{experience.location}</span>}
+                  <span>{monthYear(experience.startDate)} – {experience.current ? "Present" : monthYear(experience.endDate)}</span>
+                  {experience.description && <p>{experience.description}</p>}
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="pp-card">

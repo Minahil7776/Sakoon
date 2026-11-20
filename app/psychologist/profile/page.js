@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requirePsychologist } from "@/lib/psychologist";
 import { getOwnProfile, computeCompleteness, BOOKABLE_THRESHOLD } from "@/lib/profile";
 import { Ring, SECTION_HREF } from "../ui";
-import { PhotoUploader, BasicsForm, AboutForm, SpecializationsForm, QualificationsForm, ConsultationForm } from "./forms";
+import { PhotoUploader, BasicsForm, WorkExperienceForm, AboutForm, SpecializationsForm, QualificationsForm, ConsultationForm } from "./forms";
 
 export const metadata = { title: "Profile & credentials — Sakoon" };
 
@@ -31,9 +31,19 @@ export default async function ProfilePage() {
           <Section id="basic" title="Basics" sub="Your photo, title and how clients can reach you in their language.">
             <PhotoUploader name={user.fullName} photoUrl={profile.photoUrl} />
             <BasicsForm profile={{
-              title: profile.title ?? "", experienceYears: profile.experienceYears,
+              title: profile.title ?? "",
               institution: profile.institution ?? "", languages: profile.languages,
             }} />
+          </Section>
+
+          <Section id="experience" title="Work experience" sub="Add job titles, organizations and dates to show clients your professional background.">
+            <WorkExperienceForm items={profile.workExperiences.map((item) => ({
+              id: item.id, title: item.title, organization: item.organization, location: item.location ?? "",
+              startDate: item.startDate.toISOString().slice(0, 7),
+              endDate: item.endDate?.toISOString().slice(0, 7) ?? "",
+              current: item.current, description: item.description ?? "", documentPath: item.documentPath,
+              hasDocument: !!item.documentPath,
+            }))} />
           </Section>
 
           <Section id="about" title="About you" sub="Describe your approach in your own words. Clients read this first.">
