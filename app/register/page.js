@@ -15,13 +15,11 @@ const ROLES = [
 const STEP_OF = {
   fullName: 2, email: 2, phone: 2, password: 2,
   title: 3, specialization: 3,
-  qualification: 4, institution: 4, licenseNumber: 4, licenseBody: 4,
 };
 
 const EMPTY = {
   fullName: "", email: "", phone: "", password: "",
   title: "", specialization: "",
-  qualification: "", institution: "", licenseNumber: "", licenseBody: "",
 };
 
 function localErrors(step, v) {
@@ -38,11 +36,6 @@ function localErrors(step, v) {
     if (!v.title) e.title = "Choose your professional title.";
     if (!v.specialization) e.specialization = "Choose your specialization.";
   }
-  if (step === 4) {
-    if (v.qualification.trim().length < 2) e.qualification = "Enter your highest qualification, e.g. M.Sc Clinical Psychology.";
-    if (v.institution.trim().length < 2) e.institution = "Enter the institution you studied at.";
-    if (v.licenseNumber.trim() && !v.licenseBody.trim()) e.licenseBody = "Enter who issued this licence.";
-  }
   return e;
 }
 
@@ -55,7 +48,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const isPsy = role === "psychologist";
-  const last = isPsy ? 4 : 2;
+  const last = isPsy ? 3 : 2;
   const set = (k) => (e) => setValues((v) => ({ ...v, [k]: e.target.value }));
   const err = (k) => errors[k];
 
@@ -95,7 +88,6 @@ export default function RegisterPage() {
   const heading = {
     2: ["Your details", isPsy ? "We’ll use these to contact you about your application." : "We’ll use these to confirm your bookings."],
     3: ["Your practice", "This appears on your public profile. You can change it any time."],
-    4: ["Your credentials", "Our team verifies these before your profile goes live."],
   }[step];
 
   return (
@@ -151,22 +143,6 @@ export default function RegisterPage() {
                   value={values.specialization} onChange={set("specialization")} error={err("specialization")}
                   hint="You can add more specializations after signing up." />
                 
-              </>
-            )}
-
-            {step === 4 && (
-              <>
-                <Field id="qualification" label="Highest qualification" placeholder="e.g. M.Sc Clinical Psychology"
-                  value={values.qualification} onChange={set("qualification")} error={err("qualification")} />
-                <Field id="institution" label="University or institution" value={values.institution}
-                  onChange={set("institution")} error={err("institution")} />
-                <Field id="licenseNumber" label="Licence or registration number (optional)"
-                  value={values.licenseNumber} onChange={set("licenseNumber")} error={err("licenseNumber")}
-                  hint="You’ll need this to go live. You can add it later." />
-                {values.licenseNumber.trim() && (
-                  <Field id="licenseBody" label="Issued by" placeholder="e.g. Pakistan Association of Clinical Psychologists"
-                    value={values.licenseBody} onChange={set("licenseBody")} error={err("licenseBody")} />
-                )}
               </>
             )}
 

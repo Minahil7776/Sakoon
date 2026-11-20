@@ -13,7 +13,7 @@ export async function POST(req) {
   const d = parsed.data;
 
   try {
-    // One nested write: the user, profile, specialization and credentials are created together or not at all.
+    // One nested write: the user and role-specific profile are created together or not at all.
     const user = await prisma.user.create({
       data: {
         fullName: d.fullName,
@@ -32,14 +32,6 @@ export async function POST(req) {
                       isPrimary: true,
                       specialization: { connectOrCreate: { where: { name: d.specialization }, create: { name: d.specialization } } },
                     }],
-                  },
-                  qualifications: {
-                    create: [
-                      { type: "degree", title: d.qualification, institution: d.institution },
-                      ...(d.licenseNumber
-                        ? [{ type: "license", title: "Professional licence", institution: d.licenseBody, reference: d.licenseNumber }]
-                        : []),
-                    ],
                   },
                 },
               },

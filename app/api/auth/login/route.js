@@ -27,9 +27,10 @@ export async function POST(req) {
       );
     if (user.status !== "active")
       return NextResponse.json(
-        { errors: { form: "This account is not active. Contact support for help." } },
+        { errors: { form: "This account is suspended. Contact support for help." } },
         { status: 403 }
       );
+    
 
     await createSession(user);
     return NextResponse.json({ ok: true });

@@ -20,7 +20,7 @@
 .a-ico-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 .a-avatar { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #dcefeb; color: var(--teal-dark); font-weight: 700; font-size: 0.8rem; }
 
-.a-main { padding: 32px clamp(18px, 3.5vw, 44px) 64px; max-width: 1240px; width: 100%; }
+.a-main { min-width: 0; padding: 32px clamp(18px, 3.5vw, 44px) 64px; width: 100%; }
 .a-head { margin-bottom: 26px; }
 .a-head h1 { margin: 0; font-size: 2rem; }
 .a-head p { margin: 4px 0 0; color: var(--muted); }
